@@ -704,7 +704,10 @@ async def renew_pcrid_list():
 async def resolve0(data):
     global cache, timeStamp
     timeStamp = int(time.time())
-    info=data["res"]['user_info']
+    try:
+        info = data["res"]['user_info']
+    except:
+        return
     pcrid = data["uid"]
     res = [int(info['arena_rank']), int(info['grand_arena_rank']), int(info['last_login_time']), 0, 0]
     if pcrid not in cache:
