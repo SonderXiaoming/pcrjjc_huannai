@@ -24,7 +24,7 @@
 
 ![UMQ 70I67M426P0W_XCLRMS](https://user-images.githubusercontent.com/98363578/196014053-031c86b9-ddb5-4389-99ee-183d8dafa749.PNG)
 
-# TODO：
+# TODO：（等pr）
 
 竞技场击剑历史改为跟公版一致，实现持久化
 
