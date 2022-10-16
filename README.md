@@ -20,6 +20,10 @@
 
 ####  6）大部分指令仅支持群聊，支持私聊/群聊推送。
 
+## 指令：
+
+![UMQ 70I67M426P0W_XCLRMS](https://user-images.githubusercontent.com/98363578/196014053-031c86b9-ddb5-4389-99ee-183d8dafa749.PNG)
+
 # TODO：
 
 竞技场击剑历史改为跟公版一致，实现持久化
