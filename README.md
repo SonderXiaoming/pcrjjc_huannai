@@ -2,6 +2,10 @@
 
 ## 警告：本插件代码质量很差，介意请使用[公版pcrjjc2](https://github.com/cc004/pcrjjc2)。欢迎大佬改了pr。
 
+## 警告：旧版hoshino好像会出现resolve3未定义等奇怪bug，请更新新版hoshino，本人已知的最旧版本是7月11日的hoshino
+
+## 坐等大佬写多cq适配（是不是应该at线宝）
+
 ## 未经大量测试，有任何bug，正规群/hoshino群找一个叫雨中流浪汉的狗头或者提issue(最好直接pr)
 
 ## 使用方法
