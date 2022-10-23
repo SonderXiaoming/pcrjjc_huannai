@@ -749,18 +749,20 @@ async def resolve1(data):
         result_support = pic2b64(result_support) # 转base64发送，不用将图片存本地
         result_support = MessageSegment.image(result_support)
         sv.logger.info('竞技场查询图片已准备完毕！')
-        try:
-            await bot.send(ev, f"\n{str(result_image)}\n{result_support}", at_sender=True)
-        except Exception as e:
-            sv.logger.info("do nothing")
+        for sid in get_self_ids():
+            try:
+                await bot.send_group_msg(self_id = sid,group_id = int(ev.group_id),message =  f"\n{str(result_image)}\n{result_support}")
+                break
+            except Exception as e:
+                pass
     except ApiException as e:
             await bot.send(ev,f'查询出错，{e}', at_sender=True)
            
 async def resolve2(data):
     global bind_cache, cache, lck
-    res=data["res"]['user_info']
-    bot=data["bot"]
-    ev=data["ev"]
+    res = data["res"]['user_info']
+    bot = data["bot"]
+    ev = data["ev"]
     i = data["index"]
     pcrid = data["uid"]
     manual_query_list_name =  data["list"]
@@ -779,7 +781,12 @@ async def resolve2(data):
         if len(query_list) == len(manual_query_list_name):
             query_list.sort()
             pic = image_draw(''.join(query_list))
-            await bot.send(ev, f'[CQ:image,file={pic}]')
+            for sid in get_self_ids():
+                try:
+                    await bot.send_group_msg(self_id = sid,group_id = int(ev.group_id),message =  f'[CQ:image,file={pic}]')
+                    break
+                except Exception as e:
+                    pass
 
 async def resolve3(data):
     global bind_cache, lck, friendList
@@ -790,60 +797,61 @@ async def resolve3(data):
     friendList = data['friendlist']
     try:
         res = data["res"]['user_info']
-    except:
-        await bot.send(ev, f'找不到这个uid，大概率是你输错了！', at_sender=True)
-        return
-    qid = str(ev.user_id)
-    gid = ev.group_id
-    async with lck:
-        if qid in bind_cache:
-            bind_num = len(bind_cache[qid]["pcrid"])
-            if bind_num >= 8:
-                await bot.send(ev,'您订阅了太多账号啦！')
-                return
-            elif pcrid in bind_cache[qid]["pcrid"]:
-                await bot.send(ev,'这个uid您已经订阅过了，不要重复订阅！')
-                return
-            else:
-                bind_cache[qid]["pcrid"].append(pcrid)
-                bind_cache[qid]["pcrName"].append(nickname if nickname else res["user_name"])
-                bind_cache[qid]["noticeType"].append(1100)
-                reply = '添加成功！'
-        else:          
-            bind_cache[qid] = {
-                "pcrid": [pcrid],
-                "noticeType": [1100],
-                "pcrName": [nickname if nickname else res["user_name"]],
-                "gid": gid,
-                "bot_id": 0,
-                "private":False,
-                "notice_on":False
-            }
-            reply = '添加成功！'
-            if gid == 0:
-                bind_cache[qid]["private"] = True
-                if len(friendList):
-                    await renew_friendlist()
-                if qid in friendList:
-                    pri_user = 0
-                    for i in bind_cache:
-                        if bind_cache[i]['notice_on'] and bind_cache[i]['private']:
-                            pri_user += 1
-                    if pri_user >= MAX_PRI:
-                        reply += '私聊推送用户已达上限！无法开启私聊推送。你可以发送“在本群推送”，改为群聊推送。'
-                    else:
-                        bind_cache[qid]["notice_on"] = True
-                        reply_adm = f'''{qid}添加了私聊pcrjjc推送'''
-                        await bot.send_private_msg(user_id = SUPERUSERS[0], message = reply_adm)
-                        reply += '已为您开启推送。由于是私聊推送，已通知管理员！'
+        qid = str(ev.user_id)
+        gid = ev.group_id
+        async with lck:
+            if qid in bind_cache:
+                bind_num = len(bind_cache[qid]["pcrid"])
+                if bind_num >= 8:
+                    reply = '您订阅了太多账号啦！'
+                elif pcrid in bind_cache[qid]["pcrid"]:
+                    reply = '这个uid您已经订阅过了，不要重复订阅！'
                 else:
-                    reply += '开启私聊推送需要先加好友！你也可以发送“在本群推送”，改为群聊推送。'
-            else:
-                bind_cache[qid]["notice_on"] = True
-                reply +='已为您开启群聊推送！'
-
-        save_binds()
-    await bot.send(ev, reply)
+                    bind_cache[qid]["pcrid"].append(pcrid)
+                    bind_cache[qid]["pcrName"].append(nickname if nickname else res["user_name"])
+                    bind_cache[qid]["noticeType"].append(1100)
+                    reply = '添加成功！'
+            else:          
+                bind_cache[qid] = {
+                    "pcrid": [pcrid],
+                    "noticeType": [1100],
+                    "pcrName": [nickname if nickname else res["user_name"]],
+                    "gid": gid,
+                    "bot_id": 0,
+                    "private":False,
+                    "notice_on":False
+                }
+                reply = '添加成功！'
+                if gid == 0:
+                    bind_cache[qid]["private"] = True
+                    if len(friendList):
+                        await renew_friendlist()
+                    if qid in friendList:
+                        pri_user = 0
+                        for i in bind_cache:
+                            if bind_cache[i]['notice_on'] and bind_cache[i]['private']:
+                                pri_user += 1
+                        if pri_user >= MAX_PRI:
+                            reply += '私聊推送用户已达上限！无法开启私聊推送。你可以发送“在本群推送”，改为群聊推送。'
+                        else:
+                            bind_cache[qid]["notice_on"] = True
+                            reply_adm = f'''{qid}添加了私聊pcrjjc推送'''
+                            await bot.send_private_msg(user_id = SUPERUSERS[0], message = reply_adm)
+                            reply += '已为您开启推送。由于是私聊推送，已通知管理员！'
+                    else:
+                        reply += '开启私聊推送需要先加好友！你也可以发送“在本群推送”，改为群聊推送。'
+                else:
+                    bind_cache[qid]["notice_on"] = True
+                    reply +='已为您开启群聊推送！'
+            save_binds()
+    except:
+        reply = f'找不到这个uid，大概率是你输错了！'
+    for sid in get_self_ids():
+        try:
+            await bot.send_group_msg(self_id = sid,group_id = int(ev.group_id),message =  reply)
+            break
+        except Exception as e:
+            pass
 
 async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType：1:jjc排名变动   2:pjjc排名变动  3:登录时间刷新
     global bind_cache
@@ -887,19 +895,21 @@ async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType
                     msg = name + change
                     today_notice += 1
                     if bind_cache[qid]["private"] == True:
-                        try:
-                            await bot.send_private_msg(user_id=int(qid), message=msg)
-                        except:
-                            bind_cache[qid]["notice_on"] = False
-                            coffee = SUPERUSERS[0]
-                            await bot.send_private_msg(user_id=coffee, message='jjc私聊推送发送失败！\n user_id:'+qid+'\n' + msg)
+                        for sid in get_self_ids():
+                            try:
+                                await bot.send_private_msg(self_id = sid, user_id=int(qid), message = msg)
+                                return
+                            except:
+                                pass
+                        bind_cache[qid]["notice_on"] = False
                     else:
-                        try:
-                            gid = bind_cache[qid]["gid"]
-                            msg += '[CQ:at,qq=' + qid + ']'
-                            await bot.send_group_msg(group_id=int(gid), message=msg)
-                        except Exception as e:
-                            sv.logger.info(f'bot账号不在群{gid}中，将忽略该消息')
+                        msg += '[CQ:at,qq=' + qid + ']'
+                        for sid in get_self_ids():
+                            try:
+                                await bot.send_group_msg(self_id = sid,group_id = int(bind_cache[qid]["gid"]), message = msg)
+                                break
+                            except Exception as e:
+                                pass
                 break
 
 #========================================AUTO========================================
@@ -908,13 +918,14 @@ async def renew_friendlist():
     global friendList, lck_friendList
     bot = get_bot()
     old_friendList = friendList
-    flist = await bot.get_friend_list()
-    async with lck_friendList:
-        friendList = []
-        for i in flist:
-            friendList.append(str(i['user_id']))
-        old_friendList = list(set(old_friendList))
-        friendList = list(set(friendList))
+    for sid in get_self_ids():
+        flist = await bot.get_friend_list(self_id = sid)
+        async with lck_friendList:
+            friendList = []
+            for i in flist:
+                friendList.append(str(i['user_id']))
+            old_friendList = list(set(old_friendList))
+            friendList = list(set(friendList))
 
 
 @sv.on_notice('friend_add')     #新增好友时，不全部刷新好友列表
