@@ -26,7 +26,7 @@
 
 ## 指令：
 
-![UMQ 70I67M426P0W_XCLRMS](https://user-images.githubusercontent.com/98363578/196014053-031c86b9-ddb5-4389-99ee-183d8dafa749.PNG)
+![RA~{9)`IQJUR5S_ T( 9(0D](https://user-images.githubusercontent.com/98363578/200429798-2a992f39-84e2-4c5f-b199-d08b27706e44.PNG)
 
 # TODO：（等pr）
 
