@@ -19,7 +19,6 @@ from hoshino.typing import NoticeSession, MessageSegment
 
 sv_help='''\t\t\t\t【竞技场帮助】
 可以添加的订阅：[jjc][pjjc][排名上升][上线提醒]
-#上线提醒仅在14：30~15：00播报
 #排名上升提醒对jjc和pjjc同时生效
 #每个QQ号至多添加8个uid的订阅
 #默认开启jjc、pjjc，关闭排名上升、上线提醒
@@ -726,13 +725,10 @@ async def resolve0(data):
                 cache[pcrid][4] += 1    #今日pjjc排名上升次数+1
             await sendNotice(res[1],last[1],pcrid,2)
         if res[2] != last[2]:
-            if (res[2]-last[2]) < 300:      #最后上线时间变动小于300秒，不提醒，不刷新缓存。
+            if (res[2]-last[2]) < 60:      #最后上线时间变动小于60秒，不提醒，不刷新缓存。
                 cache[pcrid][2] = last[2]
             else:
-                last_login_hour = (res[2]%86400//3600+8)%24
-                last_login_min = res[2]%3600//60
-                if last_login_hour ==14 and last_login_min >=30:
-                    await sendNotice(res[2],0,pcrid,3)
+                await sendNotice(res[2],0,pcrid,3)
 
 async def resolve1(data):
     global bind_cache, lck
