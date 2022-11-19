@@ -4,7 +4,7 @@ from copy import deepcopy
 from json import load, dump
 from nonebot import get_bot, on_command
 from os.path import dirname, join, exists
-from asyncio import Lock
+from asyncio import Lock, gather
 from .query import queue
 from .pcrclient import ApiException
 from .safeservice import SafeService
@@ -937,8 +937,8 @@ async def on_arena_schedule():
     global pcrid_list
     if len(pcrid_list) ==0:
         await renew_pcrid_list()
-    for uid in pcrid_list:
-        await queue.put((10,(resolve0,uid,{"uid":uid})))
+    await queue.join()
+    await gather(*map(lambda uid: queue.put((10,(resolve0,uid,{"uid":uid}))), pcrid_list))
 
 @sv.on_notice('group_decrease.leave')
 async def leave_notice(session: NoticeSession):
@@ -991,4 +991,3 @@ async def send_parena_history(bot, ev):
         msg = f'\n{JJCH._select(ID, 0)}'
         await bot.send(ev, msg, at_sender=True)
 '''
-

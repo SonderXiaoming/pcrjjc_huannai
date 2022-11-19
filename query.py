@@ -118,7 +118,11 @@ async def query(client):
                 res = (await client.callapi('/profile/get_profile', {'target_viewer_id': int(data[1])}))
             data[2]["res"] = res
             await data[0](data[2])
-        except:traceback.print_exc()
+        except:
+            traceback.print_exc()
+        finally:
+            queue.task_done()
+
 
 @on_command(f'validate{ordd}')
 async def validate(session):
