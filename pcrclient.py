@@ -14,7 +14,7 @@ from dateutil.parser import parse
 
 import json
 
-apiroot = 'http://le1-prod-all-gs-gzlj.bilibiligame.net'
+apiroot = 'https://l3-prod-all-gs-gzlj.bilibiligame.net'
 debugging = 1
 
 from os.path import dirname, join, exists
