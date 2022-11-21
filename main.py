@@ -942,14 +942,14 @@ async def on_arena_schedule():
 
 @sv.on_notice('group_decrease.leave')
 async def leave_notice(session: NoticeSession):
-    global lck, binds
+    global lck, bind_cache
     uid = str(session.ctx['user_id'])
     gid = str(session.ctx['group_id'])
     bot = get_bot()
     async with lck:
-        bind_cache = deepcopy(binds)
-        info = bind_cache[uid]
-        if uid in binds and info['gid'] == gid:
+        binds = deepcopy(bind_cache)
+        info = binds[uid]
+        if uid in bind_cache and info['gid'] == gid:
             delete_arena(uid)
             await bot.send_group_msg(group_id = int(info['gid']),message = f'{uid}退群了，已自动删除其绑定在本群的竞技场订阅推送')
 
