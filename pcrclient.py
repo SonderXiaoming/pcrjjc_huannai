@@ -159,12 +159,12 @@ class pcrclient:
             data_headers = response['data_headers']
             if "/check/game_start" == apiurl and "store_url" in data_headers:
                 global version
-                version = data_headers["store_url"].split('_')[1][:-2]
                 import re
                 pattern = re.compile(r"\d\.\d\.\d")
-                version = pattern.findall(version)[0]
+                version = pattern.findall(data_headers["store_url"])[0]
 
                 defaultHeaders['APP-VER'] = version
+                self.headers['APP-VER'] = version
                 with open(config, "w", encoding='utf-8') as fp:
                     print(version, file=fp)
 
