@@ -13,6 +13,7 @@ from .create_img import generate_info_pic, generate_support_pic
 from hoshino import priv,get_self_ids
 from hoshino.util import pic2b64
 from hoshino.config import SUPERUSERS
+from nonebot.log import logger
 from hoshino.typing import NoticeSession, MessageSegment
 
 #from .jjchistory import *
@@ -24,7 +25,7 @@ sv_help='''\t\t\t\t【竞技场帮助】
 #默认开启jjc、pjjc，关闭排名上升、上线提醒
 #手动查询时，返回昵称、jjc/pjjc排名、场次、
 jjc/pjjc当天排名上升次数、最后登录时间。
-#支持群聊/私聊使用。建议群聊使用，大量私聊号会寄。
+#支持群聊使用。只允许群聊使用！！！
 ------------------------------------------------
 命令格式：
 #只绑定1个uid时，绑定的序号可以不填。
@@ -42,8 +43,11 @@ jjc/pjjc当天排名上升次数、最后登录时间。
 #0表示关闭，1表示开启
 #4个数字依次代表jjc、pjjc、排名上升、上线提醒
 #例如：“竞技场设置1011 2” “竞技场设置1110 0”
-11）换私聊推送（限私聊发送，需要好友）
-12）在本群推送（限群聊发送，无需好友）
+#上线提醒：第4位表示上线提醒等级，可以写0~3
+0表示关闭，1表示10分钟cd，仅在2点半~3点报，
+2表示10分钟cd，全天报；3表示1分钟cd全天报。
+每天5点会把上线提醒等级3改成2，有需要的可以再次手动开启。
+11）在本群推送（限群聊发送，无需好友）
 '''
 sv_help_adm='''------------------------------------------------
 管理员帮助：
@@ -109,7 +113,6 @@ async def pcrjjc_number(bot, ev):
 @sv.on_rex(r'^竞技场查询 ?(\d+)?$')
 async def on_query_arena(bot, ev):
     global bind_cache, lck
-
     ret = ev['match']
     qid = str(ev.user_id)
     try:
@@ -673,9 +676,11 @@ def delete_arena(uid):
     '''
     订阅删除方法
     '''
-    #JJCH._remove(bind_cache[uid]['id'])
-    bind_cache.pop(uid)
-    save_binds()
+    try:
+        bind_cache.pop(uid)
+        save_binds()
+    except:
+        logger.info("该用户可能已经不在订阅中")
 
 async def renew_pcrid_list():
     global bind_cache, pcrid_list, lck, lck_friendList, friendList
@@ -686,8 +691,6 @@ async def renew_pcrid_list():
         await renew_friendlist()
         async with lck_friendList:
             copy_friendList = friendList
-    if len(copy_friendList)==0:
-        return
     async with lck:        
         for qid in bind_cache:
             if bind_cache[qid]["notice_on"] == False:
@@ -708,6 +711,7 @@ async def resolve0(data):
     except:
         return
     pcrid = data["uid"]
+    #logger.info(f'渠query for {pcrid}') #debug
     res = [int(info['arena_rank']), int(info['grand_arena_rank']), int(info['last_login_time']), 0, 0]
     if pcrid not in cache:
         cache[pcrid] = res
@@ -725,10 +729,7 @@ async def resolve0(data):
                 cache[pcrid][4] += 1    #今日pjjc排名上升次数+1
             await sendNotice(res[1],last[1],pcrid,2)
         if res[2] != last[2]:
-            if (res[2]-last[2]) < 60:      #最后上线时间变动小于60秒，不提醒，不刷新缓存。
-                cache[pcrid][2] = last[2]
-            else:
-                await sendNotice(res[2],0,pcrid,3)
+            await sendNotice(res[2],last[2],pcrid,3)
 
 async def resolve1(data):
     global bind_cache, lck
@@ -886,8 +887,13 @@ async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType
                 jjcNotice = True if tmp//1000 else False
                 pjjcNotice = True if (tmp%1000)//100 else False
                 riseNotice = True if (tmp%100)//10 else False
-                onlineNotice = True if tmp%10 else False
-                if (((noticeType == 1 and jjcNotice) or (noticeType == 2 and pjjcNotice)) and (riseNotice or (new>old))) or (noticeType ==3 and onlineNotice):
+                onlineNotice = False
+                if (OnlineType := tmp%10):
+                    if (new-old) < 60 if OnlineType == 3 else 60 * 10: 
+                        cache[pcrid][2] = old #间隔太短，不更新缓存
+                    elif OnlineType != 1 or ((new % 86400//3600+8)%24 == 14 and new % 3600 // 60 >= 30): #类型1，只在特定时间播报
+                        onlineNotice = True
+                if (((noticeType == 1 and jjcNotice) or (noticeType == 2 and pjjcNotice)) and (riseNotice or (new>old))) or (noticeType == 3 and onlineNotice):
                     msg = name + change
                     today_notice += 1
                     if bind_cache[qid]["private"] == True:
@@ -902,7 +908,7 @@ async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType
                         msg += '[CQ:at,qq=' + qid + ']'
                         for sid in get_self_ids():
                             try:
-                                await bot.send_group_msg(self_id = sid,group_id = int(bind_cache[qid]["gid"]), message = msg)
+                                await bot.send_group_msg(self_id = sid, group_id = int(bind_cache[qid]["gid"]), message = msg)
                                 break
                             except Exception as e:
                                 pass
@@ -923,7 +929,6 @@ async def renew_friendlist():
             old_friendList = list(set(old_friendList))
             friendList = list(set(friendList))
 
-
 @sv.on_notice('friend_add')     #新增好友时，不全部刷新好友列表
 async def friend_add(session: NoticeSession):
     global friendList
@@ -934,9 +939,7 @@ async def friend_add(session: NoticeSession):
 
 @sv.scheduled_job('interval', minutes=0.3) # minutes是刷新频率，可按自身服务器性能输入其他数值，可支持整数、小数
 async def on_arena_schedule():
-    global pcrid_list
-    if len(pcrid_list) ==0:
-        await renew_pcrid_list()
+    await renew_pcrid_list()
     await queue.join()
     await gather(*map(lambda uid: queue.put((10,(resolve0,uid,{"uid":uid}))), pcrid_list))
 
@@ -954,16 +957,22 @@ async def leave_notice(session: NoticeSession):
             await bot.send_group_msg(group_id = int(info['gid']),message = f'{uid}退群了，已自动删除其绑定在本群的竞技场订阅推送')
 
 @sv.scheduled_job('cron', hour='5')
-def clear_ranking_rise_time():
+async def clear_ranking_rise_time():
     global cache, today_notice ,yesterday_notice
     yesterday_notice = today_notice
     today_notice = 0
-    for pcrid in cache:
+    for pcrid in list(cache.keys()):
         if pcrid in pcrid_list:
             cache[pcrid][3] = 0
             cache[pcrid][4] = 0
         else:
             del cache[pcrid]
+    async with lck:             #上线提醒LV3改成2
+        for qid in bind_cache:
+            for i in range(len(bind_cache[qid]['noticeType'])):
+                if bind_cache[qid]['noticeType'][i]%10 ==3:
+                    bind_cache[qid]['noticeType'][i] -= 1
+        save_binds()
 
 #========================================TODO========================================
 '''
