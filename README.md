@@ -26,7 +26,7 @@
 
 ## 指令：
 
-![RA~{9)`IQJUR5S_ T( 9(0D](https://user-images.githubusercontent.com/98363578/200429798-2a992f39-84e2-4c5f-b199-d08b27706e44.PNG)
+![XEV(IO69_7JY9VXDR4`UQ30](https://user-images.githubusercontent.com/98363578/209237860-ee906075-833d-44cf-9a93-71f296808d22.PNG)
 
 # TODO：（等pr）
 
