@@ -154,7 +154,7 @@ async def send_arena_sub_status(bot,ev):
             jjcNotice = True if tmp//1000 else False
             pjjcNotice = True if (tmp%1000)//100 else False
             riseNotice = True if (tmp%100)//10 else False
-            onlineNotice = True if tmp%10 else False
+            onlineNotice = tmp%10
             noticeType = '推送内容：'
             if jjcNotice:
                 noticeType += 'jjc、'
@@ -163,13 +163,14 @@ async def send_arena_sub_status(bot,ev):
             if riseNotice:
                 noticeType += '排名上升、'
             if onlineNotice:
-                noticeType += '上线提醒、'
+                noticeType += '上线提醒LV'+str(onlineNotice)+'、'
             if noticeType == '推送内容：':
                 noticeType += '无'
             else:
                 noticeType = noticeType.strip('、')
             reply += noticeType
-            reply += '\n'                
+            reply += '\n'
+        reply += '###上线提醒LV越高，提醒越频繁。详情见竞技场帮助\n'                   
         pic = image_draw(reply)
         await bot.send(ev,f'[CQ:image,file={pic}]')
     else:
@@ -477,7 +478,7 @@ async def set_noticeType(bot,ev):
             reply = '您还没有绑定jjc，绑定方式：\n[竞技场绑定 uid] uid为pcr(b服)个人简介内13位数字'
     await bot.send(ev,reply)  
 
-@sv.on_rex(r'^竞技场设置 ?([01]{4}) ?(\d)?$')
+@sv.on_rex(r'^竞技场设置 ?([01]{3}[0123]) ?(\d)?$')
 async def set_allType(bot,ev):
     global bind_cache, lck
     qid = str(ev.user_id)
@@ -853,7 +854,6 @@ async def resolve3(data):
 async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType：1:jjc排名变动   2:pjjc排名变动  3:登录时间刷新
     global bind_cache
     global timeStamp, jjc_log, today_notice
-    print('sendNotice   sendNotice    sendNotice')
     bot = get_bot()
     if noticeType == 3:
         change = '上线了！'
@@ -894,6 +894,7 @@ async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType
                     elif OnlineType != 1 or ((new % 86400//3600+8)%24 == 14 and new % 3600 // 60 >= 30): #类型1，只在特定时间播报
                         onlineNotice = True
                 if (((noticeType == 1 and jjcNotice) or (noticeType == 2 and pjjcNotice)) and (riseNotice or (new>old))) or (noticeType == 3 and onlineNotice):
+                    print('sendNotice   sendNotice    sendNotice')
                     msg = name + change
                     today_notice += 1
                     if bind_cache[qid]["private"] == True:
