@@ -888,8 +888,8 @@ async def sendNotice(new:int, old:int, pcrid:int, noticeType:int):   #noticeType
                 pjjcNotice = True if (tmp%1000)//100 else False
                 riseNotice = True if (tmp%100)//10 else False
                 onlineNotice = False
-                if (OnlineType := tmp%10):
-                    if (new-old) < 60 if OnlineType == 3 else 60 * 10: 
+                if (OnlineType := tmp%10) and noticeType == 3:
+                    if (new-old) < (60 if OnlineType == 3 else 60 * 10): 
                         cache[pcrid][2] = old #间隔太短，不更新缓存
                     elif OnlineType != 1 or ((new % 86400//3600+8)%24 == 14 and new % 3600 // 60 >= 30): #类型1，只在特定时间播报
                         onlineNotice = True
