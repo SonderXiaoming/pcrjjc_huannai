@@ -47,7 +47,7 @@ async def captchaVerifier(*args):
         local_url_head = f"{public_address}/geetest/"
         url = f"?captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
         await bot.send_private_msg(
-            user_id=acinfo['admin'],
+            user_id=acinfo[0]['admin'],
             message=f'pcr账号登录需要验证码，请完成以下链接中的验证内容后将第1个方框的内容点击复制，并加上"validate{ordd} "前缀发送给机器人完成验证'
                     f'\n示例：validate{ordd} 123456789\n您也可以发送 validate{ordd} auto 命令bot自动过验证码'
                     f'\n验证链接头：{local_url_head}链接{url}，备用链接头：{online_url_head}'
@@ -93,9 +93,9 @@ async def captchaVerifier(*args):
 
     if captcha_cnt >= 5:
         otto = False
-        await bot.send_private_msg(user_id=acinfo['admin'],
+        await bot.send_private_msg(user_id=acinfo[0]['admin'],
                                    message=f'thread{ordd}: 自动过码多次尝试失败，可能为服务器错误，自动切换为手动。\n确实服务器无误后，可发送 validate{ordd} auto重新触发自动过码。')
-        await bot.send_private_msg(user_id=acinfo['admin'], message=f'thread{ordd}: Changed to manual')
+        await bot.send_private_msg(user_id=acinfo[0]['admin'], message=f'thread{ordd}: Changed to manual')
         validating = False
         return "manual"
 
@@ -138,14 +138,15 @@ async def query(client):
 @on_command(f'validate{ordd}')
 async def validate(session):
     global binds, lck, validate, validating, captcha_lck, otto
-    if session.ctx['user_id'] == acinfo['admin']:
-        validate = session.ctx['message'].extract_plain_text().replace(f"validate{ordd}", "").strip()
+    if session.ctx['user_id'] == acinfo[0]['admin']:
+        validate = session.ctx['message'].extract_plain_text().replace(
+            f"validate{ordd}", "").strip()
         if validate == "manual":
             otto = False
-            await bot.send_private_msg(user_id=acinfo['admin'], message=f'thread{ordd}: Changed to manual')
+            await bot.send_private_msg(user_id=acinfo[0]['admin'], message=f'thread{ordd}: Changed to manual')
         elif validate == "auto":
             otto = True
-            await bot.send_private_msg(user_id=acinfo['admin'], message=f'thread{ordd}: Changed to auto')
+            await bot.send_private_msg(user_id=acinfo[0]['admin'], message=f'thread{ordd}: Changed to auto')
         try:
             captcha_lck.release()
         except:
