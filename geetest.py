@@ -19,7 +19,7 @@ async def render_template(template, **kwargs):
     return await t.render_async(**kwargs)
 
 
-switcher = Blueprint('switcher', __name__)
+switcher = Blueprint('geetest', __name__)
 
 
 @switcher.route('/geetest')
