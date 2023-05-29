@@ -43,7 +43,7 @@ async def captchaVerifier(*args):
         gt = args[0]
         challenge = args[1]
         userid = args[2]
-        online_url_head = f"https://help.tencentbot.top/geetest/"
+        online_url_head = f"https://help.tencentbot.top/geetest_/"
         local_url_head = f"{public_address}/geetest/"
         url = f"?captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
         await bot.send_private_msg(
