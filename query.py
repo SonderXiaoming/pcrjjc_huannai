@@ -143,6 +143,7 @@ async def validate(session):
             f"validate{ordd}", "").strip()
         if validate == "manual":
             otto = False
+            validating = True
             await bot.send_private_msg(user_id=acinfo[0]['admin'], message=f'thread{ordd}: Changed to manual')
         elif validate == "auto":
             otto = True
