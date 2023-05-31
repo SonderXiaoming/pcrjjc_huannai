@@ -34,11 +34,12 @@ bot_.server_app.register_blueprint(geetest_validate)
 @bot_.on_startup
 async def get_real_ip():
     global public_address
-    if config.public_address:
-        public_address = config.public_address
-    elif config.IP:
-        public_address = f"{config.IP}:{config.PORT}"
-    else:
+    try:
+        if config.public_address:
+            public_address = config.public_address
+        elif config.IP:
+            public_address = f"{config.IP}:{config.PORT}"
+    except AttributeError:
         from .query import acinfo
         try:
             resp = await aiorequests.get(url="https://4.ipw.cn", timeout=3)
