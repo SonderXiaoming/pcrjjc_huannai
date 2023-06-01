@@ -2,10 +2,8 @@ import os
 
 import jinja2
 import hoshino
-from hoshino import config, aiorequests
+from hoshino import config
 from quart import Blueprint
-
-public_address = f"127.0.0.1:{config.PORT}"
 
 template_folder = os.path.join(os.path.dirname(__file__), 'geetest')
 env = jinja2.Environment(
@@ -32,25 +30,31 @@ bot_.server_app.register_blueprint(geetest_validate)
 
 
 @bot_.on_startup
-async def get_real_ip():
-    global public_address
+async def get_real_ip() -> str:
+    public_address = f"127.0.0.1:{config.PORT}"
     try:
         if config.public_address:
             public_address = config.public_address
         elif config.IP:
             public_address = f"{config.IP}:{config.PORT}"
     except AttributeError:
-        from .query import acinfo
-        try:
-            resp = await aiorequests.get(url="https://4.ipw.cn", timeout=3)
-            real_ip = await resp.text
-            public_address = f"{real_ip}:{config.PORT}"
-            hoshino.logger.info(f"using fetched real ip as public address: {public_address}")
-            await bot_.send_private_msg(
-                user_id=acinfo[0]['admin'],
-                message=f"成功获取公网IP：{real_ip}\n注意：本IP仅在你有公网IP时才有效！如果你没有公网IP，请使用127.0.0.1作为你的IP！"
-            )
-        except Exception as e:
-            hoshino.logger.error(f"获取公网IP失败\n{e}")
-            await bot_.send_private_msg(user_id=acinfo[0]['admin'], message=f"获取公网IP失败，使用默认IP\n{e}")
+        # from .query import acinfo
+        # try:
+        #     resp = await aiorequests.get(url="https://4.ipw.cn", timeout=3)
+        #     real_ip = await resp.text
+        #     public_address = f"{real_ip}:{config.PORT}"
+        #     hoshino.logger.info(f"using fetched real ip as public address: {public_address}")
+        #     await bot_.send_private_msg(
+        #         user_id=acinfo[0]['admin'],
+        #         message=f"成功获取公网IP：{real_ip}\n注意：本IP仅在你有公网IP时才有效！如果你没有公网IP，请使用127.0.0.1作为你的IP！"
+        #     )
+        # except Exception as e:
+        #     hoshino.logger.error(f"获取公网IP失败\n{e}")
+        #     await bot_.send_private_msg(user_id=acinfo[0]['admin'], message=f"获取公网IP失败，使用默认IP\n{e}")
+        pass
     hoshino.logger.info(f"current public address: {public_address}")
+    return public_address
+
+
+async def get_public_address():
+    return await get_real_ip()
