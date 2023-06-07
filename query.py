@@ -5,7 +5,7 @@ from json import load, loads
 from os.path import dirname, join
 from nonebot import get_bot, on_command
 from hoshino.aiorequests import get
-from .geetest import public_address
+from .geetest import get_public_address
 from .pcrclient import pcrclient, ApiException, bsdkclient
 
 bot = get_bot()
@@ -44,7 +44,7 @@ async def captchaVerifier(*args):
         challenge = args[1]
         userid = args[2]
         online_url_head = f"https://help.tencentbot.top/geetest/"
-        local_url_head = f"{public_address}/geetest"
+        local_url_head = f"{await get_public_address()}/geetest"
         url = f"?captcha_type=1&challenge={challenge}&gt={gt}&userid={userid}&gs=1"
         await bot.send_private_msg(
             user_id=acinfo[0]['admin'],
